@@ -1,0 +1,8 @@
+#!/bin/sh
+
+export LD_LIBRARY_PATH=.
+
+clang src/util.c src/lins.c src/rbt.c src/utf8.c -o bin/librune.so -w -shared -fPIC > log/lib.log 2> log/lib.err
+clang test/test.c -o bin/test -L -l bin/librune.so -w > log/test.log 2> log/test.err
+
+./bin/test
