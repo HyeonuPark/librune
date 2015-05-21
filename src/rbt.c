@@ -18,13 +18,13 @@ rn_sint rn_defaultRBTCompare(rn_mem oldKey, rn_mem newKey)
     return (rn_sint) (new - old);
 }
 
-void rn_defaultRBTKeyFree(rn_mem _key)
+void rn_defaultRBTKeyRelease(rn_mem _key)
 {
     rn_sint* key = (rn_sint*) _key;
     free(key);
 }
 
-void rn_defaultRBTValueFree(rn_mem _value)
+void rn_defaultRBTValueRelease(rn_mem _value)
 {
     int i;
     rn_DefaultRBTValue* value = (rn_DefaultRBTValue*) _value;
@@ -37,7 +37,7 @@ void rn_defaultRBTValueFree(rn_mem _value)
 }
 
 rn_RBTNode rn_DefaultRBTNode = {0, 0, 0, 0, 0, 0};
-rn_RBTBody rn_DefaultRBTBody = {0, rn_defaultRBTCompare, rn_defaultRBTKeyFree, rn_defaultRBTValueFree};
+rn_RBTBody rn_DefaultRBTBody = {0, rn_defaultRBTCompare, rn_defaultRBTKeyRelease, rn_defaultRBTValueRelease};
 
 rn_rbt rn_rbtNew()
 {
@@ -352,10 +352,10 @@ void rn_rbtInsert(rn_rbt rbt, rn_mem key, rn_mem value)
     rbt->root = node;
 }
 
-void rn_rbtFreeNode(rn_rbt rbt, rn_RBTNode* node)
+void rn_rbtReleaseNode(rn_rbt rbt, rn_RBTNode* node)
 {
-    rbt->keyFree(node->key);
-    rbt->valueFree(node->value);
+    rbt->keyRelease(node->key);
+    rbt->valueRelease(node->value);
     free(node);
 }
 
@@ -507,7 +507,7 @@ void rn_rbtDeleteNode(rn_rbt rbt, rn_RBTNode* node)
         if (!parent)
         {
             rbt->root = rn_null;
-            return rn_rbtFreeNode(rbt, node);
+            return rn_rbtReleaseNode(rbt, node);
         }
 
         rn_rbtGiveItAnotherBlack(rbt, node);
@@ -521,7 +521,7 @@ void rn_rbtDeleteNode(rn_rbt rbt, rn_RBTNode* node)
             node->up->right = rn_null;
         }
 
-        return rn_rbtFreeNode(rbt, node);
+        return rn_rbtReleaseNode(rbt, node);
     }
 
     /*
@@ -536,7 +536,7 @@ void rn_rbtDeleteNode(rn_rbt rbt, rn_RBTNode* node)
             rbt->root = node->left;
             node->left->up = rn_null;
             node->left->color = rn_BLACK;
-            return rn_rbtFreeNode(rbt, node);
+            return rn_rbtReleaseNode(rbt, node);
         }
 
         rn_rbtGiveItAnotherBlack(rbt, node);
@@ -550,7 +550,7 @@ void rn_rbtDeleteNode(rn_rbt rbt, rn_RBTNode* node)
             node->up->right = node->left;
         }
         node->left->up = node->up;
-        return rn_rbtFreeNode(rbt, node);
+        return rn_rbtReleaseNode(rbt, node);
     }
 
     /*
@@ -565,7 +565,7 @@ void rn_rbtDeleteNode(rn_rbt rbt, rn_RBTNode* node)
             rbt->root = node->right;
             node->right->up = rn_null;
             node->right->color = rn_BLACK;
-            return rn_rbtFreeNode(rbt, node);
+            return rn_rbtReleaseNode(rbt, node);
         }
 
         rn_rbtGiveItAnotherBlack(rbt, node);
@@ -579,7 +579,7 @@ void rn_rbtDeleteNode(rn_rbt rbt, rn_RBTNode* node)
             node->up->right = node->right;
         }
         node->right->up = node->up;
-        return rn_rbtFreeNode(rbt, node);
+        return rn_rbtReleaseNode(rbt, node);
     }
 
     /*
@@ -706,16 +706,16 @@ void rn_rbtForEach(rn_rbt rbt, rn_RBTForEachHandler handler, rn_mem data)
     rn_rbtForEachNode(handler, rbt->root, (rn_uint)0, data);
 }
 
-void rn_rbtFreeNodeRecursive(rn_rbt rbt, rn_RBTNode* node)
+void rn_rbtReleaseNodeRecursive(rn_rbt rbt, rn_RBTNode* node)
 {
     if (!node) return;
-    rn_rbtFreeNodeRecursive(rbt, node->left);
-    rn_rbtFreeNodeRecursive(rbt, node->right);
-    rn_rbtFreeNode(rbt, node);
+    rn_rbtReleaseNodeRecursive(rbt, node->left);
+    rn_rbtReleaseNodeRecursive(rbt, node->right);
+    rn_rbtReleaseNode(rbt, node);
 }
 
-void rn_rbtFree(rn_rbt rbt)
+void rn_rbtRelease(rn_rbt rbt)
 {
-    rn_rbtFreeNodeRecursive(rbt, rbt->root);
+    rn_rbtReleaseNodeRecursive(rbt, rbt->root);
     free(rbt);
 }

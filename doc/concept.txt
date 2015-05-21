@@ -1,0 +1,82 @@
+rune-language :
+
+    make it easy to use C code
+    both natural-language-like and c-like syntax
+    extremely customizable syntax
+    only (){}[].,'":; are reserved by syntax
+
+
+object :
+
+    In rune, just everything is object.
+    Rune object is a map. It's key and value is also a object.
+    Rune object is a function. It can be called with single argument.
+
+
+link :
+
+    Under the code, each keywords in the code is treated as a link.
+    Link point a bridge between parent and child object.
+    Link has 3 fields: parent, key, child.
+    Parent is the parent object that this link is started.
+    Key is the key object that represent this link in the parent object.
+    So key must be unique in the parent object.
+    Child is the child object that this link is pointing.
+
+
+gc :
+
+    Rune object has special field: level
+    Level is distance between this object and nearest root object.
+    To detect level, each object(except root ones) has a single prime link.
+    Prime link's child is the object that we talking about.
+    Prime link's parent has lowest level in the parents that the object has.
+    So objects and prime links are shaped as a tree.
+    When the object got a new link, and it's parent's level is lower then
+        the prime one's level, that new link become the prime link.
+    When the object's prime link is removed, the object find a parent
+        that has lowest level in the parents.
+    If found 2 or more, process described below is executed for each of
+        founded parents, until new prime link is selected.
+    The context follows that parent's prime link chain.
+    If the context is arrived one of the root object, the link between
+        the object and the parent object will be the new prime object.
+    If the context is arrived the object that we're talking about, it means
+        the object should be destroyed because it's isolated.
+    When the object got a new prime link, it reset it's level.
+
+
+syntax :
+
+    - () -
+    This is capsule.
+    Capsule capsulize the expression.
+    This expression will be executed when this capsule is referenced.
+    In code, the capsule is treated as a keyword that holds object that
+        inside expression returns.
+
+    - {} -
+    This is function.
+    Function also capsulize the expression too.
+    But that expression will executed when this function is called, not referenced.
+    Also, function must be called with a single argument.
+
+    - [] -
+    This is selector.
+    Selector selects object's child by inside expression's return object.
+
+    - .foo -
+    This is just a synthetic sugar for ["foo"]
+
+    - ,:; -
+    This is separator.
+    Expression that contains separators will return new object
+        and set divided expression's return value as a child of the new object.
+    ; means just ignore previous expression's return value.
+    : means set a new child whose key is previous expression's return value and
+        value is next expression's return value.
+    , separated expressions returns list of returned values.
+
+    - ''"" -
+    This is string.
+    Any words inside of it is treated as a pure unicode string.

@@ -331,7 +331,7 @@ void rn_linsDelete(rn_lins lins, rn_mem value)
 	}
 }
 
-void rn_linsFree(rn_lins lins)
+void rn_linsRelease(rn_lins lins)
 {
     rn_LinsNode* node;
     rn_LinsNode* nodeNext;

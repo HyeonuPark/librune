@@ -34,6 +34,9 @@ extern const rn_ushort rn_USHORT_MAX;
 extern const rn_uint rn_UINT_MAX;
 extern const rn_ulong rn_ULONG_MAX;
 
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+
 
 /* lins.c */
 
@@ -61,13 +64,13 @@ void linsSet(rn_lins, rn_sint, rn_mem);
 void linsDeleteIndex(rn_lins, rn_sint);
 void linsDelete(rn_lins, rn_mem);
 void linsForEach(rn_lins, rn_LinsForEachHandler, rn_mem);
-void linsFree(rn_lins);
+void linsRelease(rn_lins);
 
 
 /* rbt.c */
 
 typedef rn_sint (*rn_RBTCompare) (rn_mem, rn_mem);
-typedef void (*rn_RBTContentFree) (rn_mem);
+typedef void (*rn_RBTContentRelease) (rn_mem);
 typedef void (*rn_RBTForEachHandler) (rn_uint, rn_mem, rn_mem, rn_mem);
 
 typedef struct rn_rbtNode{
@@ -82,8 +85,8 @@ typedef struct rn_rbtNode{
 typedef struct rn_rbtBody{
     struct rn_rbtNode* root;
     rn_RBTCompare compare;
-    rn_RBTContentFree keyFree;
-    rn_RBTContentFree valueFree;
+    rn_RBTContentRelease keyRelease;
+    rn_RBTContentRelease valueRelease;
 }rn_RBTBody;
 
 typedef struct rn_defaultRBTValue{
@@ -99,7 +102,7 @@ rn_mem rn_rbtGet(rn_rbt, rn_mem);
 void rn_rbtInsert(rn_rbt, rn_mem, rn_mem);
 rn_mem rn_rbtDelete(rn_rbt, rn_mem);
 void rn_rbtForEach(rn_rbt, rn_RBTForEachHandler, rn_mem);
-void rn_rbtFree(rn_rbt);
+void rn_rbtRelease(rn_rbt);
 
 
 /* utf8.c */
@@ -115,6 +118,44 @@ typedef rn_UTF8Buffer* rn_utf8;
 rn_utf8 rn_utf8Encode(rn_unicode);
 rn_utf8 rn_utf8DecodeStart();
 rn_unicode rn_utf8DecodeNext(rn_utf8, rn_byte);
+
+
+/* obj.c */
+
+typedef struct rn_objBody{
+    rn_uint size;
+    rn_mem data;
+    struct rn_objBody* super;
+    void (*init) ();
+    struct rn_objBody* (*call) (struct rn_objBody*, struct rn_objBody*);
+    struct rn_objBody* (*get) (struct rn_objBody*, struct rn_objBody*);
+    void (*set) (struct rn_objBody*, struct rn_objBody*, struct rn_objBody*);
+    void (*release) (struct rn_objBody*)
+}rn_ObjBody;
+
+typedef rn_ObjBody* rn_obj;
+
+extern rn_obj rn_ObjRoot;
+extern rn_obj rn_ObjMap;
+extern rn_obj rn_ObjString;
+extern rn_obj rn_ObjInt;
+extern rn_obj rn_ObjFloat;
+
+void rn_initObj();
+rn_obj rn_objNew(rn_obj);
+rn_obj rn_objMapNew();
+rn_obj rn_objStringNew(rn_unicode*);
+rn_obj rn_objIntNew(rn_uint);
+rn_obj rn_objFloatNew(double);
+
+
+/* dict.c */
+
+rn_rbt rn_dictNew();
+rn_obj rn_dictGet(rn_rbt, rn_unicode*);
+void rn_dictSet(rn_rbt, rn_unicode*, rn_obj);
+rn_obj rn_dictDelete(rn_rbt, rn_unicode*);
+void rn_dictRelease(rn_rbt);
 
 
 #endif /* LIBRUNE_H_ */

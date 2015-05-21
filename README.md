@@ -1,2 +1,2 @@
 # librune
-Library for rune interpreter
+Library for the rune interpreter
